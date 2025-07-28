@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FiveLife - Mapa</title>
+<style>
+  body {
+    margin: 0; padding: 0;
+    background: black;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    overflow: hidden;
+  }
+  h1 {
+    font-size: 4rem;
+    margin-top: 100px;
+    text-shadow: 0 0 15px white;
+  }
+  #openMapBtn {
+    margin-top: 30px;
+    font-size: 1.5rem;
+    padding: 15px 30px;
+    background: white;
+    color: black;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  #openMapBtn:hover {
+    background: #444;
+    color: white;
+  }
+
+  #mapOverlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: black;
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+  }
+
+  #mapImage {
+    cursor: grab;
+    user-select: none;
+    max-width: none;
+    max-height: none;
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+  }
+
+  #closeButton {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1100;
+    padding: 10px 20px;
+    font-size: 1rem;
+    background: white;
+    color: black;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  #closeButton:hover {
+    background: crimson;
+    color: white;
+  }
+</style>
+</head>
+<body>
+
+<h1>FiveLife</h1>
+<button id="openMapBtn">MAPA</button>
+
+<div id="mapOverlay">
+  <button id="closeButton">Zamknij obraz</button>
+  <img id="mapImage" src="mapa.jpg" alt="Mapa" />
+</div>
+
+<!-- Panzoom -->
+<script src="https://unpkg.com/@panzoom/panzoom@9.4.0/dist/panzoom.min.js"></script>
+<script>
+  const openMapBtn = document.getElementById('openMapBtn');
+  const closeButton = document.getElementById('closeButton');
+  const mapOverlay = document.getElementById('mapOverlay');
+  const mapImage = document.getElementById('mapImage');
+  let panzoomInstance = null;
+
+  let cursorPosition = { x: 0, y: 0 };
+
+  // Śledzenie pozycji kursora
+  mapOverlay.addEventListener('mousemove', (e) => {
+    cursorPosition = { x: e.clientX, y: e.clientY };
+  });
+
+  openMapBtn.addEventListener('click', () => {
+    mapOverlay.style.display = 'flex';
+
+    if (!panzoomInstance) {
+      panzoomInstance = Panzoom(mapImage, {
+        maxScale: 5,
+        minScale: 0.5,
+        contain: 'outside'
+      });
+
+      mapOverlay.addEventListener('wheel', panzoomInstance.zoomWithWheel);
+
+      mapImage.addEventListener('pointerdown', () => {
+        mapImage.style.cursor = 'grabbing';
+      });
+      mapImage.addEventListener('pointerup', () => {
+        mapImage.style.cursor = 'grab';
+      });
+      mapImage.addEventListener('pointerleave', () => {
+        mapImage.style.cursor = 'grab';
+      });
+    }
+  });
+
+  closeButton.addEventListener('click', () => {
+    mapOverlay.style.display = 'none';
+  });
+
+  document.addEventListener('keydown', (e) => {
+    // ESC zamyka mapę
+    if (e.key === "Escape") {
+      mapOverlay.style.display = 'none';
+    }
+
+    // C = Zoom-in w miejscu kursora
+    if (e.key.toLowerCase() === "c" && mapOverlay.style.display === 'flex') {
+      const rect = mapImage.getBoundingClientRect();
+      const x = cursorPosition.x - rect.left;
+      const y = cursorPosition.y - rect.top;
+
+      // Zoom w punkcie pod kursorem
+      panzoomInstance.zoomIn({ animate: true, focal: { x, y } });
+    }
+  });
+</script>
+
+</body>
+</html>
